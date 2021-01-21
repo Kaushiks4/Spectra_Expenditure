@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "1031060510316",
+    "firebase_url": "https://chiranthana-a7c93.firebaseio.com",
+    "project_id": "chiranthana-a7c93",
+    "storage_bucket": "chiranthana-a7c93.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1031060510316:android:4d22ada94557f24db46a49",
+        "android_client_info": {
+          "package_name": "com.example.spectra"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1031060510316-j4sfn9va2fq82g10h6rq9o14ealna8p8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEV0qbvr3PDiHQGxROZgcOfEGy56OXO4U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1031060510316-j4sfn9va2fq82g10h6rq9o14ealna8p8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1031060510316:android:ce99141a6604932bb46a49",
+        "android_client_info": {
+          "package_name": "my.app.chiranthana"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1031060510316-j4sfn9va2fq82g10h6rq9o14ealna8p8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEV0qbvr3PDiHQGxROZgcOfEGy56OXO4U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1031060510316-j4sfn9va2fq82g10h6rq9o14ealna8p8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
