@@ -17,48 +17,47 @@ class _ViewProjectsState extends State<ViewProjects> {
   List<Project> filteredProjects;
   final TextEditingController _controller = new TextEditingController();
   String searchText = '';
+  Map<dynamic, dynamic> database;
 
   @override
   void initState() {
     super.initState();
     projects = new List();
     filteredProjects = new List();
+    database = new Map();
     loadData();
   }
 
   Future loadData() async {
     final bgRef = FirebaseDatabase.instance.reference().child("Spectra");
-    await bgRef.child("Projects").once().then((DataSnapshot data) {
-      Map<dynamic, dynamic> items = data.value;
-      if (items != null) {
-        for (var key in items.keys) {
-          for (var k in items[key].keys) {
-            String id = Encrypt.decodeString(items[key][k]['pid'].toString());
-            projects.add(Project.view(
-                pid: id,
-                pName: (items[key][k]['pName'] != null)
-                    ? items[key][k]['pName']
-                    : '',
-                fee: items[key][k]['fee'].toString(),
-                balance: items[key][k]['balance'].toString()));
-            filteredProjects.add(Project.view(
-                pid: id,
-                pName: (items[key][k]['pName'] != null)
-                    ? items[key][k]['pName']
-                    : '',
-                fee: items[key][k]['fee'].toString(),
-                balance: items[key][k]['balance'].toString()));
-          }
-        }
-        setState(() {
-          loading = false;
-        });
-      } else {
-        setState(() {
-          loading = false;
-        });
-      }
+    await bgRef.once().then((DataSnapshot data) {
+      database = data.value;
     });
+    if (database['Projects'] != null) {
+      for (var key in database['Projects'].keys) {
+        String id =
+            Encrypt.decodeString(database['Projects'][key]['pid'].toString());
+        projects.add(Project.view(
+            pid: id,
+            pName: database['Projects'][key]['pName'],
+            fee: database['Projects'][key]['fee'].toString(),
+            balance: database['Projects'][key]['paybBalance'].toString()));
+        filteredProjects.add(Project.view(
+            pid: id,
+            pName: database['Projects'][key]['pName'],
+            fee: database['Projects'][key]['fee'].toString(),
+            balance: database['Projects'][key]['payBalance'].toString()));
+      }
+      filteredProjects.sort((a, b) => int.parse(a.pid.split("#")[1])
+          .compareTo(int.parse(b.pid.split("#")[1])));
+      setState(() {
+        loading = false;
+      });
+    } else {
+      setState(() {
+        loading = false;
+      });
+    }
   }
 
   Future<void> onSearch() async {
@@ -210,7 +209,9 @@ class _ViewProjectsState extends State<ViewProjects> {
                                   context,
                                   new MaterialPageRoute(
                                       builder: (context) => new OpenProject(
-                                          project.pid, widget.name)))),
+                                          project.pid,
+                                          widget.name,
+                                          database)))),
                           DataCell(
                               Text(
                                 project.pName,
@@ -222,7 +223,9 @@ class _ViewProjectsState extends State<ViewProjects> {
                                   context,
                                   new MaterialPageRoute(
                                       builder: (context) => new OpenProject(
-                                          project.pid, widget.name)))),
+                                          project.pid,
+                                          widget.name,
+                                          database)))),
                           DataCell(
                             Text(
                               project.fee,
@@ -234,7 +237,7 @@ class _ViewProjectsState extends State<ViewProjects> {
                                 context,
                                 new MaterialPageRoute(
                                     builder: (context) => new OpenProject(
-                                        project.pid, widget.name))),
+                                        project.pid, widget.name, database))),
                           ),
                           DataCell(
                             Text(
@@ -247,7 +250,7 @@ class _ViewProjectsState extends State<ViewProjects> {
                                 context,
                                 new MaterialPageRoute(
                                     builder: (context) => new OpenProject(
-                                        project.pid, widget.name))),
+                                        project.pid, widget.name, database))),
                           ),
                         ],
                       ))

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:excel/excel.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -17,7 +16,8 @@ import 'package:spectra/screens/admin/photoview.dart';
 
 class OpenProject extends StatefulWidget {
   final String pid, name;
-  OpenProject(this.pid, this.name);
+  final Map<dynamic, dynamic> database;
+  OpenProject(this.pid, this.name, this.database);
   @override
   _OpenProjectState createState() => _OpenProjectState();
 }
@@ -25,7 +25,8 @@ class OpenProject extends StatefulWidget {
 class _OpenProjectState extends State<OpenProject> {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   bool loading = true, expense = false, income = false;
-  Map<dynamic, dynamic> project, database;
+  double totalExpenses = 0, totalIncome = 0;
+  Map<dynamic, dynamic> project;
   String type;
   List<Project> expenses;
   List<Project> incomes;
@@ -73,46 +74,49 @@ class _OpenProjectState extends State<OpenProject> {
   }
 
   Future loadData() async {
-    database = new Map();
-    final bgRef = FirebaseDatabase.instance.reference().child("Spectra");
-    await bgRef.once().then((DataSnapshot data) {
-      database = data.value;
-    });
     String id = Encrypt.encodeString(widget.pid);
-    type = (id[0] == 'P') ? 'Field' : 'Office';
-    project = database["Projects"][type][id];
+    project = widget.database["Projects"][id];
     project['pid'] = Encrypt.decodeString(project['pid'].toString());
     project['clientName'] =
-        database["Clients"][project['clientName']]['clientName'];
-    if (database["Expenses"][id] != null) {
-      for (var key in database["Expenses"][id].keys) {
-        expenses.add(Project.expense(
-            date: key,
-            head: database["Expenses"][id][key]['head'],
-            subhead: (database["Expenses"][id][key]['shead'] != null)
-                ? database["Expenses"][id][key]['shead']
-                : ' ',
-            remarks: database["Expenses"][id][key]['remarks'],
-            amount: database["Expenses"][id][key]['amount'],
-            name: database["Expenses"][id][key]['name'],
-            reciept: database["Expenses"][id][key]['reciept']));
-      }
-      if (expenses != null) {
-        expenses = sorting(expenses);
+        widget.database["Clients"][project['clientName']]['clientName'];
+    if (widget.database["Expenses"] != null) {
+      if (widget.database["Expenses"][id] != null) {
+        for (var key in widget.database["Expenses"][id].keys) {
+          expenses.add(Project.expense(
+              date: key,
+              head: widget.database["Expenses"][id][key]['head'],
+              subhead: widget.database["Expenses"][id][key]['shead'],
+              remarks: widget.database["Expenses"][id][key]['remarks'],
+              amount: widget.database["Expenses"][id][key]['amount'],
+              name: widget.database["Expenses"][id][key]['name'],
+              reciept: widget.database["Expenses"][id][key]['reciept']));
+        }
+        if (expenses != null) {
+          expenses.forEach((element) {
+            totalExpenses += double.parse(element.amount.toString());
+          });
+          expenses = sorting(expenses);
+        }
       }
     }
-    if (database["Income"][id] != null) {
-      for (var key in database["Income"][id].keys) {
-        incomes.add(Project.income(
-            date: key,
-            remarks: database["Income"][id][key]['remarks'],
-            amount: database["Income"][id][key]['amount'].toString(),
-            name: database["Income"][id][key]['recievedBy'],
-            reciept: database["Income"][id][key]['reciept'],
-            balance: database["Income"][id][key]['balance'].toString()));
-      }
-      if (incomes != null) {
-        incomes = sorting(incomes);
+    if (widget.database["Income"] != null) {
+      if (widget.database["Income"][id] != null) {
+        for (var key in widget.database["Income"][id].keys) {
+          incomes.add(Project.income(
+              date: key,
+              remarks: widget.database["Income"][id][key]['remarks'],
+              amount: widget.database["Income"][id][key]['amount'].toString(),
+              name: widget.database["Income"][id][key]['recievedBy'],
+              reciept: widget.database["Income"][id][key]['reciept'],
+              balance:
+                  widget.database["Income"][id][key]['Balance'].toString()));
+        }
+        if (incomes != null) {
+          incomes.forEach((element) {
+            totalIncome += double.parse(element.amount.toString());
+          });
+          incomes = sorting(incomes);
+        }
       }
     }
     setState(() {
@@ -219,7 +223,7 @@ class _OpenProjectState extends State<OpenProject> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20.0, 0, 0, 0),
                     child: Text(
-                      'Balance: ' + project["balance"].toString(),
+                      'Balance: ' + project["payBalance"].toString(),
                       style: TextStyle(fontSize: 20),
                     ),
                   ),
@@ -332,6 +336,25 @@ class _OpenProjectState extends State<OpenProject> {
                         )
                       : Container(),
                   dataBody(context),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  expense
+                      ? Center(
+                          child: Text(
+                            'Total Expenses: ' + totalExpenses.toString(),
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        )
+                      : Container(),
+                  income
+                      ? Center(
+                          child: Text(
+                            'Total Income: ' + totalIncome.toString(),
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        )
+                      : Container(),
                 ],
               ),
             ),
@@ -340,21 +363,30 @@ class _OpenProjectState extends State<OpenProject> {
 
   downloadExpense() async {
     List<List<dynamic>> rows = List<List<dynamic>>();
+    double total = 0;
+    rows.add(["", "", "", "EXPENSES DETAILS"]);
+    rows.add(["", ""]);
     rows.add(["Project id", widget.pid]);
+    rows.add(["Project Name", project["pName"]]);
+    rows.add(["Project Details", project["details"]]);
+    rows.add(["Project Fee", project["fee"]]);
+    rows.add(["", ""]);
     rows.add(
         ["Date", "Name", "Head", "Sub Head", "Amount", "Remarks", "Receipt"]);
     for (int i = 0; i < expenses.length; i++) {
       List<dynamic> row = List();
+      total += double.parse(expenses[i].amount.toString());
       row.add(expenses[i].date);
       row.add(expenses[i].name);
       row.add(expenses[i].head);
       row.add(expenses[i].subhead);
-      row.add(expenses[i].amount);
+      row.add(double.parse(expenses[i].amount.toString()));
       row.add(expenses[i].remarks);
       row.add(expenses[i].reciept);
       rows.add(row);
     }
-    rows.add([]);
+    rows.add(["", ""]);
+    rows.add(["Total Expenses", total]);
     try {
       Directory dir = await getExternalStorageDirectory();
       String filename = widget.pid + " expenses.xlsx";
@@ -381,19 +413,28 @@ class _OpenProjectState extends State<OpenProject> {
 
   downloadIncome() async {
     List<List<dynamic>> rows = List<List<dynamic>>();
+    double total = 0;
+    rows.add(["", "", "", "INCOME DETAILS"]);
+    rows.add(["", ""]);
     rows.add(["Project id", widget.pid]);
-    rows.add(
-        ["Date", "Name", "Head", "Sub Head", "Amount", "Remarks", "Receipt"]);
-    for (int i = 0; i < expenses.length; i++) {
+    rows.add(["Project Name", project["pName"]]);
+    rows.add(["Project Details", project["details"]]);
+    rows.add(["Project Fee", project["fee"]]);
+    rows.add(["", ""]);
+    rows.add(["Date", "Name", "Remarks", "Amount", "Balance", "Receipt"]);
+    for (int i = 0; i < incomes.length; i++) {
       List<dynamic> row = List();
+      total += double.parse(incomes[i].amount.toString());
       row.add(incomes[i].date);
       row.add(incomes[i].name);
-      row.add(incomes[i].amount);
       row.add(incomes[i].remarks);
+      row.add(double.parse(incomes[i].amount.toString()));
+      row.add(double.parse(incomes[i].balance.toString()));
       row.add(incomes[i].reciept);
       rows.add(row);
     }
-    rows.add([]);
+    rows.add(["", ""]);
+    rows.add(["", "", "Total Payment", total]);
     try {
       Directory dir = await getExternalStorageDirectory();
       String filename = widget.pid + " income.xlsx";
@@ -440,110 +481,111 @@ class _OpenProjectState extends State<OpenProject> {
                   height: 20,
                 ),
                 SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  child: DataTable(
-                    columns: <DataColumn>[
-                      DataColumn(
-                        label: Text(
-                          'Name',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
+                    width: MediaQuery.of(context).size.width,
+                    child: DataTable(
+                      columns: <DataColumn>[
+                        DataColumn(
+                          label: Text(
+                            'Name',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          numeric: false,
+                        ),
+                        DataColumn(
+                          label: Text(
+                            'Amount',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          numeric: true,
+                        ),
+                        DataColumn(
+                          label: Text(
+                            'Reciept',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        numeric: false,
-                      ),
-                      DataColumn(
-                        label: Text(
-                          'Amount',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        numeric: true,
-                      ),
-                      DataColumn(
-                        label: Text(
-                          'Reciept',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                    rows: expense
-                        ? expenses
-                            .map((employee) => DataRow(
-                                  cells: [
-                                    DataCell(
-                                      Text(
-                                        employee.name,
-                                        style: TextStyle(
-                                          fontSize: 15,
+                      ],
+                      rows: expense
+                          ? expenses
+                              .map((employee) => DataRow(
+                                    cells: [
+                                      DataCell(
+                                        Text(
+                                          employee.name,
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        employee.amount,
-                                        style: TextStyle(
-                                          fontSize: 15,
+                                      DataCell(
+                                        Text(
+                                          employee.amount,
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    DataCell(
-                                      IconButton(
-                                        icon: Icon(Icons.download_rounded),
-                                        onPressed: () => Navigator.push(
-                                            context,
-                                            new MaterialPageRoute(
-                                                builder: (context) => new Photo(
-                                                    employee.reciept,
-                                                    employee.name,
-                                                    'jpg'))),
-                                      ),
-                                    ),
-                                  ],
-                                ))
-                            .toList()
-                        : incomes
-                            .map((employee) => DataRow(
-                                  cells: [
-                                    DataCell(
-                                      Text(
-                                        employee.name,
-                                        style: TextStyle(
-                                          fontSize: 15,
+                                      DataCell(
+                                        IconButton(
+                                          icon: Icon(Icons.download_rounded),
+                                          onPressed: () => Navigator.push(
+                                              context,
+                                              new MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      new Photo(
+                                                          employee.reciept,
+                                                          employee.name,
+                                                          'jpg'))),
                                         ),
                                       ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        employee.amount,
-                                        style: TextStyle(
-                                          fontSize: 15,
+                                    ],
+                                  ))
+                              .toList()
+                          : incomes
+                              .map((employee) => DataRow(
+                                    cells: [
+                                      DataCell(
+                                        Text(
+                                          employee.name,
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    DataCell(
-                                      IconButton(
-                                        icon: Icon(Icons.download_rounded),
-                                        onPressed: () => Navigator.push(
-                                            context,
-                                            new MaterialPageRoute(
-                                                builder: (context) => new Photo(
-                                                    employee.reciept,
-                                                    employee.name,
-                                                    'jpg'))),
+                                      DataCell(
+                                        Text(
+                                          employee.amount,
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                          ),
+                                        ),
                                       ),
-                                    )
-                                  ],
-                                ))
-                            .toList(),
-                  ),
-                ),
+                                      DataCell(
+                                        IconButton(
+                                          icon: Icon(Icons.download_rounded),
+                                          onPressed: () => Navigator.push(
+                                              context,
+                                              new MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      new Photo(
+                                                          employee.reciept,
+                                                          employee.name,
+                                                          'jpg'))),
+                                        ),
+                                      )
+                                    ],
+                                  ))
+                              .toList(),
+                    )),
               ],
             )
           : Container());

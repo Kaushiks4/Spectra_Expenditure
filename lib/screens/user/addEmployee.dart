@@ -17,12 +17,10 @@ class _AddEmployeeState extends State<AddEmployee> {
   List<String> privelages = [
     "Add Projects",
     "Add Expenditure",
-    "Add Income",
     "Edit Projects",
-    "Add or Manage Payments"
+    "Add Income",
   ];
   List<String> permissions;
-
   final _formKey = GlobalKey<FormState>();
 
   @override

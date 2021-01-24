@@ -7,14 +7,15 @@ import 'package:spectra/screens/project/editProjects.dart';
 
 class EditProject extends StatefulWidget {
   final String name, id;
-  EditProject(this.id, this.name);
+  final Map<dynamic, dynamic> database;
+  EditProject(this.id, this.name, this.database);
   @override
   _EditProjectState createState() => _EditProjectState();
 }
 
 class _EditProjectState extends State<EditProject> {
   bool loading = true;
-  String clientName, dept, details, fee, pName, type, typ, balance;
+  String clientName, dept, details, fee, pName, type, balance, location;
   List<String> types = [
         "Road",
         "Tank",
@@ -23,7 +24,9 @@ class _EditProjectState extends State<EditProject> {
         "Building",
         "Others"
       ],
-      depts = ["MI", "PRED", "PWD", "Hemavathi", "Tuda", "NH", "Others"];
+      depts = ["MI", "PRED", "PWD", "Hemavathi", "Tuda", "NH", "Others"],
+      locs = ["Field", "Office"];
+
   @override
   void initState() {
     super.initState();
@@ -31,26 +34,17 @@ class _EditProjectState extends State<EditProject> {
   }
 
   Future loadData() async {
-    final bgRef = FirebaseDatabase.instance.reference().child("Spectra");
     String id = Encrypt.encodeString(widget.id);
-    typ = (id.split("%")[0] == 'P') ? 'Field' : 'Office';
-    await bgRef
-        .child("Projects")
-        .child(typ)
-        .child(id)
-        .once()
-        .then((DataSnapshot data) {
-      Map<dynamic, dynamic> items = data.value;
-      if (items != null) {
-        clientName = items['clientName'];
-        type = items["type"];
-        dept = items['dept'];
-        details = items['details'];
-        fee = items['fee'].toString();
-        pName = items['pName'];
-        balance = items["balance"].toString();
-      }
-    });
+    if (widget.database["Projects"][id] != null) {
+      clientName = widget.database["Projects"][id]['clientName'];
+      type = widget.database["Projects"][id]["type"];
+      dept = widget.database["Projects"][id]['dept'];
+      details = widget.database["Projects"][id]['details'];
+      fee = widget.database["Projects"][id]['fee'].toString();
+      pName = widget.database["Projects"][id]['pName'];
+      balance = widget.database["Projects"][id]["payBalance"].toString();
+      location = widget.database["Projects"][id]["location"].toString();
+    }
     if (mounted) {
       setState(() {
         loading = false;
@@ -213,6 +207,35 @@ class _EditProjectState extends State<EditProject> {
                       height: 20,
                     ),
                     Text(
+                      'Location: ' + location,
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    SizedBox(height: 10.0),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(40.0, 10.0, 40, 0),
+                      child: SearchableDropdown.single(
+                        items: locs.map((exNum) {
+                          return (DropdownMenuItem(
+                              child: Text(exNum), value: exNum));
+                        }).toList(),
+                        hint: "Search Location",
+                        searchHint: "Location..",
+                        onChanged: (value) {
+                          setState(() {
+                            location = value;
+                          });
+                        },
+                        dialogBox: true,
+                        isExpanded: true,
+                      ),
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    Text(
                       'Department: ' + dept,
                       style: TextStyle(fontSize: 20),
                     ),
@@ -339,15 +362,15 @@ class _EditProjectState extends State<EditProject> {
                                           Encrypt.encodeString(widget.id);
                                       await bgRef
                                           .child("Projects")
-                                          .child(typ)
                                           .child(id)
                                           .update({
                                         'pName': pName,
                                         'details': details,
                                         'fee': int.parse(fee),
-                                        'balance': bal,
+                                        'payBalance': bal,
                                         'type': type,
                                         'dept': dept,
+                                        'location': location
                                       });
                                       pr.hide();
                                       Navigator.of(context).pop();

@@ -15,6 +15,21 @@ class CreateClient extends StatefulWidget {
 class _CreateClientState extends State<CreateClient> {
   String clientName, phone, address;
   final _formKey = GlobalKey<FormState>();
+  Map<dynamic, dynamic> database;
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  loadData() async {
+    database = new Map();
+    final bgRef = FirebaseDatabase.instance.reference().child("Spectra");
+    await bgRef.once().then((DataSnapshot data) {
+      database = data.value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +138,6 @@ class _CreateClientState extends State<CreateClient> {
                             ),
                             SizedBox(height: 20.0),
                             TextFormField(
-                              keyboardType: TextInputType.number,
                               validator: (val) =>
                                   val.isEmpty ? 'Required' : null,
                               onChanged: (val) {
@@ -169,22 +183,37 @@ class _CreateClientState extends State<CreateClient> {
                             insetAnimCurve: Curves.easeInOut,
                           );
                           await pr.show();
-                          await create();
-                          Fluttertoast.showToast(
-                              msg: "Created " + clientName + " Successfully!",
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.BOTTOM,
-                              timeInSecForIosWeb: 1,
-                              backgroundColor: Colors.grey[800],
-                              textColor: Colors.white,
-                              fontSize: 16.0);
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pop();
-                          Navigator.push(
-                              context,
-                              new MaterialPageRoute(
-                                  builder: (context) =>
-                                      new ViewClients(widget.name)));
+                          var flag = await create();
+                          if (flag == 1) {
+                            Fluttertoast.showToast(
+                                msg: "Created " + clientName + " Successfully!",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                timeInSecForIosWeb: 1,
+                                backgroundColor: Colors.grey[800],
+                                textColor: Colors.white,
+                                fontSize: 16.0);
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pop();
+                            Navigator.push(
+                                context,
+                                new MaterialPageRoute(
+                                    builder: (context) =>
+                                        new ViewClients(widget.name)));
+                          } else {
+                            pr.hide();
+                            Fluttertoast.showToast(
+                                msg: "Client with name " +
+                                    clientName +
+                                    " exists!",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                timeInSecForIosWeb: 1,
+                                backgroundColor: Colors.red,
+                                textColor: Colors.white,
+                                fontSize: 16.0);
+                          }
                         }
                       },
                       child: Text(
@@ -207,12 +236,24 @@ class _CreateClientState extends State<CreateClient> {
     );
   }
 
-  Future create() async {
+  Future<int> create() async {
+    int flag = 0;
     final bgRef = FirebaseDatabase.instance.reference().child("Spectra");
-    await bgRef.child("Clients").child(phone).set({
-      'clientName': clientName,
-      'phone': phone,
-      'address': address,
-    });
+    if (database["Clients"] == null) {
+      await bgRef.child("Clients").child(clientName).set({
+        'clientName': clientName,
+        'phone': phone,
+        'address': address,
+      });
+      flag = 1;
+    } else if (!(database["Clients"].containsKey(clientName))) {
+      await bgRef.child("Clients").child(clientName).set({
+        'clientName': clientName,
+        'phone': phone,
+        'address': address,
+      });
+      flag = 1;
+    }
+    return flag;
   }
 }

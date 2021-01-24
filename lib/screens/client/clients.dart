@@ -1,7 +1,9 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:progress_dialog/progress_dialog.dart';
 import 'package:spectra/models/client.dart';
 import 'package:spectra/screens/client/createClient.dart';
+import 'package:spectra/screens/client/editClient.dart';
 import 'package:spectra/screens/client/openClient.dart';
 
 class ViewClients extends StatefulWidget {
@@ -18,6 +20,7 @@ class _ViewClientsState extends State<ViewClients> {
   final TextEditingController _controller = new TextEditingController();
   String searchText = '';
   Map<dynamic, dynamic> database;
+
   @override
   void initState() {
     super.initState();
@@ -57,7 +60,8 @@ class _ViewClientsState extends State<ViewClients> {
     });
     for (var key in clients) {
       if (key.name.toLowerCase().contains(searchText.toLowerCase()) ||
-          key.phone.toLowerCase().contains(searchText.toLowerCase())) {
+          key.phone.toLowerCase().contains(searchText.toLowerCase()) ||
+          key.address.toLowerCase().contains(searchText.toLowerCase())) {
         filtered.add(key);
       }
     }
@@ -68,6 +72,8 @@ class _ViewClientsState extends State<ViewClients> {
 
   @override
   Widget build(BuildContext context) {
+    final ProgressDialog pr = ProgressDialog(context,
+        type: ProgressDialogType.Normal, isDismissible: false, showLogs: true);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -124,7 +130,7 @@ class _ViewClientsState extends State<ViewClients> {
                       },
                     ),
                   ),
-                  dataBody()
+                  dataBody(pr)
                 ],
               ),
             ),
@@ -138,13 +144,14 @@ class _ViewClientsState extends State<ViewClients> {
     );
   }
 
-  Widget dataBody() => SingleChildScrollView(
+  Widget dataBody(ProgressDialog pr) => SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Column(children: [
           SizedBox(
             height: 20,
           ),
-          Center(
+          SizedBox(
+            width: MediaQuery.of(context).size.width,
             child: DataTable(
               columnSpacing: 15,
               columns: <DataColumn>[
@@ -156,7 +163,6 @@ class _ViewClientsState extends State<ViewClients> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  numeric: false,
                 ),
                 DataColumn(
                   label: Text(
@@ -166,7 +172,24 @@ class _ViewClientsState extends State<ViewClients> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  numeric: true,
+                ),
+                DataColumn(
+                  label: Text(
+                    'Edit',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Delete',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
               rows: filtered
@@ -184,7 +207,7 @@ class _ViewClientsState extends State<ViewClients> {
                                   new MaterialPageRoute(
                                       builder: (context) => new OpenClient(
                                           database,
-                                          client.phone,
+                                          client.name,
                                           widget.name)))),
                           DataCell(
                               Text(
@@ -198,8 +221,75 @@ class _ViewClientsState extends State<ViewClients> {
                                   new MaterialPageRoute(
                                       builder: (context) => new OpenClient(
                                           database,
-                                          client.phone,
+                                          client.name,
                                           widget.name)))),
+                          DataCell(Icon(Icons.edit),
+                              onTap: () => Navigator.push(
+                                  context,
+                                  new MaterialPageRoute(
+                                      builder: (context) => new EditClient(
+                                          widget.name, client.name)))),
+                          DataCell(
+                              Icon(
+                                Icons.delete,
+                                color: Colors.red,
+                              ), onTap: () {
+                            showDialog<void>(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text('Confirm'),
+                                    content: SingleChildScrollView(
+                                      child: ListBody(
+                                        children: <Widget>[
+                                          Text('Delete ' + client.name + '?'),
+                                        ],
+                                      ),
+                                    ),
+                                    actions: <Widget>[
+                                      TextButton(
+                                          child: Text('Yes'),
+                                          onPressed: () async {
+                                            pr.style(
+                                              message: 'Deleting..',
+                                              borderRadius: 10.0,
+                                              backgroundColor: Colors.white,
+                                              progressWidget:
+                                                  CircularProgressIndicator(
+                                                strokeWidth: 5.0,
+                                              ),
+                                              elevation: 10.0,
+                                              insetAnimCurve: Curves.easeInOut,
+                                            );
+                                            final rmRef = FirebaseDatabase
+                                                .instance
+                                                .reference()
+                                                .child("Spectra");
+                                            await rmRef
+                                                .child("Clients")
+                                                .child(client.name)
+                                                .remove();
+                                            pr.hide();
+                                            Navigator.of(context).pop();
+                                            Navigator.of(context).pop();
+                                            Navigator.push(
+                                                context,
+                                                new MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        new ViewClients(
+                                                            widget.name)));
+                                          }),
+                                      TextButton(
+                                        child: Text('No'),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                });
+                          }),
                         ],
                       ))
                   .toList(),

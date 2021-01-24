@@ -12,7 +12,6 @@ import 'package:progress_dialog/progress_dialog.dart';
 import 'package:searchable_dropdown/searchable_dropdown.dart';
 import 'package:spectra/models/encryption.dart';
 import 'package:spectra/models/project.dart';
-import 'package:spectra/screens/loginHome.dart';
 
 class Income extends StatefulWidget {
   final String name;
@@ -50,12 +49,9 @@ class _IncomeState extends State<Income> {
       projects = new List();
       Map<dynamic, dynamic> items = data.value;
       if (items != null) {
-        for (var k in items.keys) {
-          for (var pid in items[k].keys) {
-            projects.add(Project.select(
-                pName: items[k][pid]['details'],
-                pid: Encrypt.decodeString(pid)));
-          }
+        for (var pid in items.keys) {
+          projects.add(Project.select(
+              pName: items[pid]['pName'], pid: Encrypt.decodeString(pid)));
         }
         if (mounted) {
           setState(() {
@@ -99,10 +95,10 @@ class _IncomeState extends State<Income> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 30),
+                        SizedBox(height: 10),
                         Center(
                           child: Text(
-                            'Expenses',
+                            'Income',
                             style: TextStyle(
                               fontSize: 35.0,
                               fontWeight: FontWeight.bold,
@@ -127,6 +123,35 @@ class _IncomeState extends State<Income> {
                             searchHint: "Name",
                             onChanged: (value) {
                               projectId = value;
+                            },
+                            searchFn: (String keyword, items) {
+                              List<int> ret = List<int>();
+                              if (keyword != null &&
+                                  items != null &&
+                                  keyword.isNotEmpty) {
+                                keyword.split(" ").forEach((k) {
+                                  int i = 0;
+                                  projects.forEach((item) {
+                                    if (k.isNotEmpty &&
+                                        (item.pName
+                                                .toString()
+                                                .toLowerCase()
+                                                .contains(k.toLowerCase()) ||
+                                            item.pid
+                                                .toString()
+                                                .toLowerCase()
+                                                .contains(k.toLowerCase()))) {
+                                      ret.add(i);
+                                    }
+                                    i++;
+                                  });
+                                });
+                              }
+                              if (keyword.isEmpty) {
+                                ret = Iterable<int>.generate(items.length)
+                                    .toList();
+                              }
+                              return (ret);
                             },
                             dialogBox: true,
                             isExpanded: true,
@@ -223,7 +248,7 @@ class _IncomeState extends State<Income> {
                                   insetAnimCurve: Curves.easeInOut,
                                 );
                                 await pr.show();
-                                filePicker(context);
+                                await filePicker(context);
                                 pr.hide();
                                 Fluttertoast.showToast(
                                     msg: "Uploading!",
@@ -325,19 +350,17 @@ class _IncomeState extends State<Income> {
   Future update() async {
     final bgRef = FirebaseDatabase.instance.reference().child("Spectra");
     projectId = Encrypt.encodeString(projectId);
-    String type = (projectId[0] == 'P') ? 'Field' : 'Office';
     await bgRef
         .child("Projects")
-        .child(type)
         .child(projectId)
         .once()
         .then((DataSnapshot data) {
       Map<dynamic, dynamic> items = data.value;
-      balance = items['balance'].toString();
+      balance = items['payBalance'].toString();
     });
     var newBal = double.parse(balance) - double.parse(amount);
-    await bgRef.child("Projects").child(type).child(projectId).update({
-      'balance': newBal,
+    await bgRef.child("Projects").child(projectId).update({
+      'payBalance': newBal,
     });
     await bgRef.child("Income").child(projectId).update({
       date: {
@@ -346,7 +369,7 @@ class _IncomeState extends State<Income> {
         'reciept': imurl,
         'timeStamp': date,
         'recievedBy': widget.name,
-        'balance': newBal,
+        'Balance': newBal,
       }
     });
   }

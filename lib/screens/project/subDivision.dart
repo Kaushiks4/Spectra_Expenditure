@@ -22,9 +22,15 @@ class _SubDivisionState extends State<SubDivision> {
     await bgRef.child("SHeads").child(head).once().then((DataSnapshot data) {
       Map<dynamic, dynamic> items = data.value;
       sheads.clear();
-      if (database["SHeads"][head] != null) {
+      if (items != null) {
         for (var key in items.keys) {
           sheads.add(key);
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            hloading = false;
+          });
         }
       }
     });
@@ -138,7 +144,7 @@ class _SubDivisionState extends State<SubDivision> {
           Center(
             child: RaisedButton(
               onPressed: () async {
-                if (shead != null && shead.isEmpty) {
+                if (shead != null || shead.isEmpty) {
                   final bgRef =
                       FirebaseDatabase.instance.reference().child("Spectra");
                   await bgRef
@@ -193,7 +199,55 @@ class _SubDivisionState extends State<SubDivision> {
         return new Column(
           children: <Widget>[
             ListTile(
-              title: new Text(sheads[index]),
+              title: new Text(
+                sheads[index],
+                style: TextStyle(fontSize: 20),
+              ),
+              trailing: IconButton(
+                icon: Icon(
+                  Icons.delete,
+                  color: Colors.red,
+                ),
+                onPressed: () async {
+                  showDialog<void>(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('Confirm'),
+                          content: SingleChildScrollView(
+                            child: ListBody(
+                              children: <Widget>[
+                                Text('Delete ' + sheads[index] + '?'),
+                              ],
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                                child: Text('Yes'),
+                                onPressed: () async {
+                                  final rmRef = FirebaseDatabase.instance
+                                      .reference()
+                                      .child("Spectra");
+                                  await rmRef
+                                      .child("SHeads")
+                                      .child(head)
+                                      .child(sheads[index])
+                                      .remove();
+                                  Navigator.of(context).pop();
+                                  await getSheads();
+                                }),
+                            TextButton(
+                              child: Text('No'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      });
+                },
+              ),
             ),
           ],
         );

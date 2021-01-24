@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:spectra/screens/admin/changeAdmin.dart';
-import 'package:spectra/screens/admin/payment.dart';
 import 'package:spectra/screens/client/clients.dart';
 import 'package:spectra/screens/project/headAndSubhead.dart';
 import 'package:spectra/screens/project/projects.dart';
@@ -19,145 +18,205 @@ class _AdminHomeState extends State<AdminHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Spectra Associates',
-          style: TextStyle(
-            fontSize: 25.0,
+          title: Text(
+            'Spectra ',
+            style: TextStyle(
+              fontSize: 20.0,
+            ),
           ),
-        ),
-        backgroundColor: Colors.green,
-      ),
-      body: SingleChildScrollView(),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            SingleChildScrollView(
-              child: DrawerHeader(
+          backgroundColor: Colors.green,
+          actions: [
+            FlatButton(
+                onPressed: () => Navigator.of(context).pop(),
                 child: Text(
-                  'Welcome ' + widget.name,
+                  'Logout',
                   style: TextStyle(
-                    fontSize: 25,
-                    letterSpacing: 2,
-                    color: Colors.white,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20),
+                ))
+          ]),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(
+              height: 20,
+            ),
+            Center(
+              child: Text(
+                'Spectra Associates',
+                style: TextStyle(fontSize: 25.0, fontWeight: FontWeight.bold),
+              ),
+            ),
+            SizedBox(
+              height: 60,
+            ),
+            Center(
+              child: SizedBox(
+                width: 200,
+                child: RaisedButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        new MaterialPageRoute(
+                            builder: (context) =>
+                                new ViewProjects(widget.name)));
+                  },
+                  child: Text(
+                    'Projects',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  color: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.green,
+              ),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            Center(
+              child: SizedBox(
+                width: 200,
+                child: RaisedButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        new MaterialPageRoute(
+                            builder: (context) =>
+                                new ViewClients(widget.name)));
+                  },
+                  child: Text(
+                    'Clients',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  color: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
                 ),
               ),
             ),
-            ListTile(
-              title: Text(
-                'Projects',
-                style: TextStyle(
-                  fontSize: 20,
-                  letterSpacing: 1,
-                ),
-              ),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.push(
-                    context,
-                    new MaterialPageRoute(
-                        builder: (context) => new ViewProjects(widget.name)));
-              },
+            SizedBox(
+              height: 20,
             ),
-            ListTile(
-              title: Text(
-                'Clients',
-                style: TextStyle(
-                  fontSize: 20,
-                  letterSpacing: 1,
+            Center(
+              child: SizedBox(
+                width: 200,
+                child: RaisedButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        new MaterialPageRoute(
+                            builder: (context) =>
+                                new ViewEmployees(widget.name)));
+                  },
+                  child: Text(
+                    'Employees',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  color: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
                 ),
               ),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.push(
-                    context,
-                    new MaterialPageRoute(
-                        builder: (context) => new ViewClients(widget.name)));
-              },
             ),
-            ListTile(
-              title: Text(
-                'Employees',
-                style: TextStyle(
-                  fontSize: 20,
-                  letterSpacing: 1,
-                ),
-              ),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.push(
-                    context,
-                    new MaterialPageRoute(
-                        builder: (context) => new ViewEmployees(widget.name)));
-              },
+            SizedBox(
+              height: 20,
             ),
-            ListTile(
-              title: Text(
-                'Reports',
-                style: TextStyle(
-                  fontSize: 20,
-                  letterSpacing: 1,
+            Center(
+              child: SizedBox(
+                width: 200,
+                child: RaisedButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        new MaterialPageRoute(
+                            builder: (context) => new Reports(widget.name)));
+                  },
+                  child: Text(
+                    'Reports',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  color: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
                 ),
               ),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.push(
-                    context,
-                    new MaterialPageRoute(
-                        builder: (context) => new Reports(widget.name)));
-              },
             ),
-            ListTile(
-              title: Text(
-                'Add Heads and Subheads',
-                style: TextStyle(
-                  fontSize: 20,
-                  letterSpacing: 1,
-                ),
-              ),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.push(
-                    context,
-                    new MaterialPageRoute(
-                        builder: (context) => new HeadAndSubhead(widget.name)));
-              },
+            SizedBox(
+              height: 20,
             ),
-            ListTile(
-              title: Text(
-                'Payments',
-                style: TextStyle(
-                  fontSize: 20,
-                  letterSpacing: 1,
+            Center(
+              child: SizedBox(
+                width: 200,
+                child: RaisedButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        new MaterialPageRoute(
+                            builder: (context) =>
+                                new HeadAndSubhead(widget.name)));
+                  },
+                  child: Text(
+                    'Expense Heads',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  color: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
                 ),
               ),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.push(
-                    context,
-                    new MaterialPageRoute(
-                        builder: (context) => new Payment('', widget.name)));
-              },
             ),
-            ListTile(
-              title: Text(
-                'Change login credentials',
-                style: TextStyle(
-                  fontSize: 20,
-                  letterSpacing: 1,
+            SizedBox(
+              height: 20,
+            ),
+            Center(
+              child: SizedBox(
+                width: 200,
+                child: RaisedButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        new MaterialPageRoute(
+                            builder: (context) =>
+                                new ChangeAdmin(widget.name)));
+                  },
+                  child: Text(
+                    'Admin Details',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  color: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
                 ),
               ),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.push(
-                    context,
-                    new MaterialPageRoute(
-                        builder: (context) => new ChangeAdmin(widget.name)));
-              },
+            ),
+            SizedBox(
+              height: 10,
             ),
           ],
         ),

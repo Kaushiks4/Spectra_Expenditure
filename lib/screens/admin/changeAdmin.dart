@@ -12,8 +12,27 @@ class ChangeAdmin extends StatefulWidget {
 }
 
 class _ChangeAdminState extends State<ChangeAdmin> {
-  String name = '', password = '', error = '';
+  String name = '', password = '', error = '', oldP = '', pass;
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  loadData() async {
+    final bgRef = FirebaseDatabase.instance.reference().child("Spectra");
+    await bgRef
+        .child("Admins")
+        .child(widget.name)
+        .once()
+        .then((DataSnapshot data) {
+      oldP = data.value["password"].toString();
+      print(oldP);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final ProgressDialog pr = ProgressDialog(context,
@@ -142,33 +161,100 @@ class _ChangeAdminState extends State<ChangeAdmin> {
                 child: RaisedButton(
                   onPressed: () async {
                     if (_formKey.currentState.validate()) {
-                      pr.style(
-                        message: 'Updating...',
-                        borderRadius: 10.0,
-                        backgroundColor: Colors.white,
-                        progressWidget: CircularProgressIndicator(
-                          strokeWidth: 5.0,
-                        ),
-                        elevation: 10.0,
-                        insetAnimCurve: Curves.easeInOut,
-                      );
-                      await pr.show();
-                      await login(pr);
-                      Fluttertoast.showToast(
-                          msg: "Updated to " + name + " successfully!",
-                          toastLength: Toast.LENGTH_LONG,
-                          gravity: ToastGravity.BOTTOM,
-                          timeInSecForIosWeb: 1,
-                          backgroundColor: Colors.grey[200],
-                          textColor: Colors.black,
-                          fontSize: 16.0);
-                      pr.hide();
-                      Navigator.of(context).pop();
-                      Navigator.push(
-                          context,
-                          new MaterialPageRoute(
-                              builder: (context) => new AdminHome(
-                                  (name.isEmpty) ? widget.name : name)));
+                      showDialog<void>(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('Verification'),
+                              content: SingleChildScrollView(
+                                child: TextFormField(
+                                  obscureText: true,
+                                  validator: (val) =>
+                                      val.isEmpty ? 'Required' : null,
+                                  onChanged: (val) {
+                                    setState(() {
+                                      pass = val.trim();
+                                    });
+                                  },
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    hintText: 'Enter current Password',
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    contentPadding: const EdgeInsets.only(
+                                        left: 14.0, bottom: 6.0, top: 8.0),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide:
+                                          BorderSide(color: Colors.grey),
+                                      borderRadius: BorderRadius.circular(10.0),
+                                    ),
+                                    enabledBorder: UnderlineInputBorder(
+                                      borderSide:
+                                          BorderSide(color: Colors.grey),
+                                      borderRadius: BorderRadius.circular(10.0),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                    child: Text('Submit'),
+                                    onPressed: () async {
+                                      if (oldP == pass) {
+                                        pr.style(
+                                          message: 'Updating...',
+                                          borderRadius: 10.0,
+                                          backgroundColor: Colors.white,
+                                          progressWidget:
+                                              CircularProgressIndicator(
+                                            strokeWidth: 5.0,
+                                          ),
+                                          elevation: 10.0,
+                                          insetAnimCurve: Curves.easeInOut,
+                                        );
+                                        await pr.show();
+                                        await login(pr);
+                                        Fluttertoast.showToast(
+                                            msg: "Updated to " +
+                                                name +
+                                                " successfully!",
+                                            toastLength: Toast.LENGTH_LONG,
+                                            gravity: ToastGravity.BOTTOM,
+                                            timeInSecForIosWeb: 1,
+                                            backgroundColor: Colors.grey[200],
+                                            textColor: Colors.black,
+                                            fontSize: 16.0);
+                                        pr.hide();
+                                        Navigator.of(context).pop();
+                                        Navigator.of(context).pop();
+                                        Navigator.push(
+                                            context,
+                                            new MaterialPageRoute(
+                                                builder: (context) =>
+                                                    new AdminHome((name.isEmpty)
+                                                        ? widget.name
+                                                        : name)));
+                                      } else {
+                                        Fluttertoast.showToast(
+                                            msg: "Invalid Password",
+                                            toastLength: Toast.LENGTH_SHORT,
+                                            gravity: ToastGravity.BOTTOM,
+                                            timeInSecForIosWeb: 1,
+                                            backgroundColor: Colors.grey[800],
+                                            textColor: Colors.white,
+                                            fontSize: 16.0);
+                                      }
+                                    }),
+                                TextButton(
+                                  child: Text('No'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          });
                     }
                   },
                   child: Text(

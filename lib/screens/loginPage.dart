@@ -205,7 +205,6 @@ class _LoginPageState extends State<LoginPage> {
           if (users[name]['password'].toString() == password) {
             permissions.clear();
             for (var permission in users[name]['permissions'].keys) {
-              print(permission);
               permissions.add(permission);
             }
             flag = 1;

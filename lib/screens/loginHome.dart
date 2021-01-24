@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:spectra/screens/admin/payment.dart';
 import 'package:spectra/screens/project/createProject.dart';
 import 'package:spectra/screens/project/editProjects.dart';
 import 'package:spectra/screens/user/expenses.dart';
@@ -17,13 +16,12 @@ class LoginHome extends StatefulWidget {
 class _LoginHomeState extends State<LoginHome> {
   @override
   Widget build(BuildContext context) {
-    print(widget.permissions);
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Spectra Associates',
+          'Spectra',
           style: TextStyle(
-            fontSize: 25.0,
+            fontSize: 20.0,
           ),
         ),
         backgroundColor: Colors.green,
@@ -39,150 +37,152 @@ class _LoginHomeState extends State<LoginHome> {
               ))
         ],
       ),
-      body: SingleChildScrollView(),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            SingleChildScrollView(
-              child: DrawerHeader(
-                child: Text(
-                  'Welcome ' + widget.name,
-                  style: TextStyle(
-                    fontSize: 25,
-                    letterSpacing: 2,
-                    color: Colors.white,
-                  ),
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.green,
-                ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(
+              height: 20,
+            ),
+            Center(
+              child: Text(
+                'Spectra Associates',
+                style: TextStyle(fontSize: 25.0, fontWeight: FontWeight.bold),
               ),
+            ),
+            SizedBox(
+              height: 60,
             ),
             (widget.permissions
                         .indexWhere((element) => element == "Add Projects") !=
                     -1)
-                ? ListTile(
-                    title: Text(
-                      'Field Project',
-                      style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 1,
+                ? Center(
+                    child: SizedBox(
+                      width: 200,
+                      child: RaisedButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              new MaterialPageRoute(
+                                  builder: (context) =>
+                                      new CreateProject(widget.name)));
+                        },
+                        child: Text(
+                          'New Project',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20.0,
+                          ),
+                        ),
+                        color: Colors.blue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
                       ),
                     ),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.push(
-                          context,
-                          new MaterialPageRoute(
-                              builder: (context) =>
-                                  new CreateProject(widget.name, 'Field')));
-                    },
                   )
                 : Container(),
-            (widget.permissions
-                        .indexWhere((element) => element == "Add Projects") !=
-                    -1)
-                ? ListTile(
-                    title: Text(
-                      'Office Project',
-                      style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.push(
-                          context,
-                          new MaterialPageRoute(
-                              builder: (context) =>
-                                  new CreateProject(widget.name, 'Office')));
-                    },
-                  )
-                : Container(),
+            SizedBox(
+              height: 20,
+            ),
             (widget.permissions.indexWhere(
                         (element) => element == "Add Expenditure") !=
                     -1)
-                ? ListTile(
-                    title: Text(
-                      'Expenditure',
-                      style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 1,
+                ? Center(
+                    child: SizedBox(
+                      width: 200,
+                      child: RaisedButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              new MaterialPageRoute(
+                                  builder: (context) =>
+                                      new Expenses(widget.name)));
+                        },
+                        child: Text(
+                          'Expenditure',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20.0,
+                          ),
+                        ),
+                        color: Colors.blue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
                       ),
                     ),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.push(
-                          context,
-                          new MaterialPageRoute(
-                              builder: (context) => new Expenses(widget.name)));
-                    },
                   )
                 : Container(),
+            SizedBox(
+              height: 20,
+            ),
             (widget.permissions
                         .indexWhere((element) => element == "Add Income") !=
                     -1)
-                ? ListTile(
-                    title: Text(
-                      'Income',
-                      style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 1,
+                ? Center(
+                    child: SizedBox(
+                      width: 200,
+                      child: RaisedButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              new MaterialPageRoute(
+                                  builder: (context) =>
+                                      new Income(widget.name)));
+                        },
+                        child: Text(
+                          'Income',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20.0,
+                          ),
+                        ),
+                        color: Colors.blue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
                       ),
                     ),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.push(
-                          context,
-                          new MaterialPageRoute(
-                              builder: (context) => new Income(widget.name)));
-                    },
                   )
                 : Container(),
+            SizedBox(
+              height: 20,
+            ),
             (widget.permissions
                         .indexWhere((element) => element == "Edit Projects") !=
                     -1)
-                ? ListTile(
-                    title: Text(
-                      'Projects',
-                      style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 1,
+                ? Center(
+                    child: SizedBox(
+                      width: 200,
+                      child: RaisedButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              new MaterialPageRoute(
+                                  builder: (context) =>
+                                      new EditProjects(widget.name)));
+                        },
+                        child: Text(
+                          'Projects',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20.0,
+                          ),
+                        ),
+                        color: Colors.blue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
                       ),
                     ),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.push(
-                          context,
-                          new MaterialPageRoute(
-                              builder: (context) =>
-                                  new EditProjects(widget.name)));
-                    },
                   )
                 : Container(),
-            (widget.permissions.indexWhere(
-                        (element) => element == "Add/Manage Payments") !=
-                    -1)
-                ? ListTile(
-                    title: Text(
-                      'Payments',
-                      style: TextStyle(
-                        fontSize: 20,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.push(
-                          context,
-                          new MaterialPageRoute(
-                              builder: (context) =>
-                                  new Payment('', widget.name)));
-                    },
-                  )
-                : Container(),
+            SizedBox(
+              height: 20,
+            ),
+            SizedBox(
+              height: 20,
+            ),
           ],
         ),
       ),

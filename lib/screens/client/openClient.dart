@@ -5,8 +5,9 @@ import 'package:spectra/screens/project/openProject.dart';
 
 class OpenClient extends StatefulWidget {
   final Map<dynamic, dynamic> database;
-  final String phone, name;
-  OpenClient(this.database, this.phone, this.name);
+  final String clientName, name;
+  OpenClient(this.database, this.clientName, this.name);
+
   @override
   _OpenClientState createState() => _OpenClientState();
 }
@@ -14,6 +15,7 @@ class OpenClient extends StatefulWidget {
 class _OpenClientState extends State<OpenClient> {
   bool loading = true;
   List<Project> projects;
+
   @override
   void initState() {
     super.initState();
@@ -23,19 +25,16 @@ class _OpenClientState extends State<OpenClient> {
 
   Future loadData() async {
     if (widget.database["Projects"] != null) {
-      for (var k in widget.database["Projects"].keys) {
-        for (var pid in widget.database["Projects"][k].keys) {
-          String id = Encrypt.decodeString(pid);
-          String type = (id.split("#")[0] == 'P') ? 'Field' : 'Office';
-          if (widget.database["Projects"][type][pid]['clientName'].toString() ==
-              widget.phone) {
-            projects.add(Project.view(
-                pid: id,
-                pName: widget.database["Projects"][type][pid]['pName'],
-                fee: widget.database["Projects"][type][pid]['fee'].toString(),
-                balance: widget.database["Projects"][type][pid]['balance']
-                    .toString()));
-          }
+      for (var pid in widget.database["Projects"].keys) {
+        String id = Encrypt.decodeString(pid);
+        if (widget.database["Projects"][pid]['clientName'].toString() ==
+            widget.clientName) {
+          projects.add(Project.view(
+              pid: id,
+              pName: widget.database["Projects"][pid]['pName'],
+              fee: widget.database["Projects"][pid]['fee'].toString(),
+              balance:
+                  widget.database["Projects"][pid]['payBalance'].toString()));
         }
       }
       if (mounted) {
@@ -146,7 +145,10 @@ class _OpenClientState extends State<OpenClient> {
                                   context,
                                   new MaterialPageRoute(
                                       builder: (context) => new OpenProject(
-                                          employee.pid, widget.name)))),
+                                            employee.pid,
+                                            widget.name,
+                                            widget.database,
+                                          )))),
                           DataCell(
                               Text(
                                 employee.pName,
@@ -158,7 +160,10 @@ class _OpenClientState extends State<OpenClient> {
                                   context,
                                   new MaterialPageRoute(
                                       builder: (context) => new OpenProject(
-                                          employee.pid, widget.name)))),
+                                            employee.pid,
+                                            widget.name,
+                                            widget.database,
+                                          )))),
                           DataCell(
                               Text(
                                 employee.fee,
@@ -170,7 +175,10 @@ class _OpenClientState extends State<OpenClient> {
                                   context,
                                   new MaterialPageRoute(
                                       builder: (context) => new OpenProject(
-                                          employee.pid, widget.name)))),
+                                            employee.pid,
+                                            widget.name,
+                                            widget.database,
+                                          )))),
                           DataCell(
                               Text(
                                 employee.balance,
@@ -182,7 +190,10 @@ class _OpenClientState extends State<OpenClient> {
                                   context,
                                   new MaterialPageRoute(
                                       builder: (context) => new OpenProject(
-                                          employee.pid, widget.name)))),
+                                            employee.pid,
+                                            widget.name,
+                                            widget.database,
+                                          )))),
                         ],
                       ))
                   .toList(),

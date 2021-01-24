@@ -4,21 +4,20 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:progress_dialog/progress_dialog.dart';
 import 'package:searchable_dropdown/searchable_dropdown.dart';
-import 'package:spectra/models/client.dart';
 import 'package:spectra/models/encryption.dart';
 
 class CreateProject extends StatefulWidget {
-  final String name, type;
-  CreateProject(this.name, this.type);
+  final String name;
+  CreateProject(this.name);
   @override
   _CreateProjectState createState() => _CreateProjectState();
 }
 
 class _CreateProjectState extends State<CreateProject> {
   bool loading = true;
-  String pid, pName, clientName, timeStamp, details, fee, type, dept;
+  String pid, pName, clientName, timeStamp, details, fee, type, dept, location;
   DateFormat _dateFormat = new DateFormat('dd-MM-yyyy-hh:mm');
-  List<Client> clients;
+  List<String> clients;
   List<String> types = [
         "Road",
         "Tank",
@@ -27,7 +26,8 @@ class _CreateProjectState extends State<CreateProject> {
         "Building",
         "Others"
       ],
-      depts = ["MI", "PRED", "PWD", "Hemavathi", "Tuda", "NH", "Others"];
+      depts = ["MI", "PRED", "PWD", "Hemavathi", "Tuda", "NH", "Others"],
+      loc = ["Field", "Office"];
   final _formKey = GlobalKey<FormState>();
   Map<dynamic, dynamic> database;
 
@@ -46,7 +46,6 @@ class _CreateProjectState extends State<CreateProject> {
     });
     await bgRef
         .child("Projects")
-        .child(widget.type)
         .limitToLast(1)
         .once()
         .then((DataSnapshot data) {
@@ -58,32 +57,18 @@ class _CreateProjectState extends State<CreateProject> {
           break;
         }
         id += 1;
-        if (widget.type.toLowerCase() == 'office') {
-          setState(() {
-            pid = 'O#' + id.toString();
-          });
-        } else {
-          setState(() {
-            pid = 'P#' + id.toString();
-          });
-        }
+        setState(() {
+          pid = 'P#' + id.toString();
+        });
       } else {
-        if (widget.type.toLowerCase() == 'office') {
-          setState(() {
-            pid = 'O#1';
-          });
-        } else {
-          setState(() {
-            pid = 'P#1';
-          });
-        }
+        setState(() {
+          pid = 'P#1';
+        });
       }
     });
     if (database["Clients"] != null) {
       for (var key in database["Clients"].keys) {
-        clients.add(Client.select(
-            name: database["Clients"][key]['clientName'],
-            phone: database["Clients"][key]['phone']));
+        clients.add(database["Clients"][key]['clientName']);
       }
       if (mounted) {
         setState(() {
@@ -129,7 +114,7 @@ class _CreateProjectState extends State<CreateProject> {
                         SizedBox(height: 15),
                         Center(
                           child: Text(
-                            'Create ' + widget.type + ' Project',
+                            'Create Project',
                             style: TextStyle(
                               fontSize: 35.0,
                               fontWeight: FontWeight.bold,
@@ -141,6 +126,30 @@ class _CreateProjectState extends State<CreateProject> {
                         Text(
                           'Project ID: ' + pid,
                           style: TextStyle(fontSize: 20),
+                        ),
+                        SizedBox(
+                          height: 15,
+                        ),
+                        Text(
+                          'Project location: ',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        SizedBox(height: 10.0),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(40.0, 10.0, 40, 0),
+                          child: SearchableDropdown.single(
+                            items: loc.map((exNum) {
+                              return (DropdownMenuItem(
+                                  child: Text(exNum), value: exNum));
+                            }).toList(),
+                            hint: "Search type",
+                            searchHint: "Type..",
+                            onChanged: (value) {
+                              location = value;
+                            },
+                            dialogBox: true,
+                            isExpanded: true,
+                          ),
                         ),
                         SizedBox(
                           height: 15,
@@ -179,7 +188,7 @@ class _CreateProjectState extends State<CreateProject> {
                           child: SearchableDropdown.single(
                             items: clients.map((exNum) {
                               return (DropdownMenuItem(
-                                  child: Text(exNum.name), value: exNum.phone));
+                                  child: Text(exNum), value: exNum));
                             }).toList(),
                             hint: "Search Client",
                             searchHint: "Client",
@@ -343,7 +352,7 @@ class _CreateProjectState extends State<CreateProject> {
     timeStamp = _dateFormat.format(d);
     final bgRef = FirebaseDatabase.instance.reference().child("Spectra");
     pid = Encrypt.encodeString(pid);
-    await bgRef.child("Projects").child(widget.type).child(pid).set({
+    await bgRef.child("Projects").child(pid).set({
       'pName': pName,
       'type': type,
       'dept': dept,
@@ -353,7 +362,7 @@ class _CreateProjectState extends State<CreateProject> {
       'fee': 0,
       'pid': pid,
       'payBalance': 0,
-      'balance': 0,
+      'location': location,
     });
   }
 }

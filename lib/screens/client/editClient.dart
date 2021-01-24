@@ -1,26 +1,19 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:progress_dialog/progress_dialog.dart';
-import 'package:searchable_dropdown/searchable_dropdown.dart';
-import 'package:spectra/screens/user/employees.dart';
+import 'package:spectra/screens/client/clients.dart';
 
-class EditEmployee extends StatefulWidget {
-  final String name, id;
-  EditEmployee(this.name, this.id);
+class EditClient extends StatefulWidget {
+  final String name, clientName;
+  EditClient(this.name, this.clientName);
   @override
-  _EditEmployeeState createState() => _EditEmployeeState();
+  _EditClientState createState() => _EditClientState();
 }
 
-class _EditEmployeeState extends State<EditEmployee> {
-  List<String> permissions;
+class _EditClientState extends State<EditClient> {
   bool loading = true;
-  List<String> privelages = [
-    "Add Projects",
-    "Add Expenditure",
-    "Edit Projects",
-    "Add Payments"
-  ];
-  String name, newName, password;
+  String clientName, phone, address;
 
   @override
   void initState() {
@@ -29,21 +22,17 @@ class _EditEmployeeState extends State<EditEmployee> {
   }
 
   Future loadData() async {
-    permissions = new List();
     final bgRef = FirebaseDatabase.instance.reference().child("Spectra");
     await bgRef
-        .child("Users")
-        .child(widget.name)
+        .child("Clients")
+        .child(widget.clientName)
         .once()
         .then((DataSnapshot data) {
       Map<dynamic, dynamic> items = data.value;
       if (items != null) {
-        name = items["name"].toString();
-        newName = name;
-        password = items["password"].toString();
-        for (var k in items["permissions"].keys) {
-          permissions.add(k);
-        }
+        clientName = items['clientName'];
+        phone = items["phone"];
+        address = items['address'];
       }
     });
     if (mounted) {
@@ -77,12 +66,13 @@ class _EditEmployeeState extends State<EditEmployee> {
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(height: 20.0),
                     Row(
                       children: [
                         Text(
-                          'Name',
+                          'Client Name: ',
                           style: TextStyle(fontSize: 20),
                         ),
                         SizedBox(width: 20),
@@ -92,13 +82,13 @@ class _EditEmployeeState extends State<EditEmployee> {
                             validator: (val) => val.isEmpty ? 'Required' : null,
                             onChanged: (val) {
                               setState(() {
-                                newName = val.trim();
+                                clientName = val.trim();
                               });
                             },
                             cursorColor: Colors.black,
                             decoration: InputDecoration(
                               border: InputBorder.none,
-                              hintText: name,
+                              hintText: clientName,
                               filled: true,
                               fillColor: Colors.white,
                               contentPadding: const EdgeInsets.only(
@@ -120,7 +110,52 @@ class _EditEmployeeState extends State<EditEmployee> {
                     Row(
                       children: [
                         Text(
-                          'Password: ',
+                          'Phone Number: ',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        SizedBox(width: 20),
+                        SizedBox(
+                          width: 200,
+                          child: TextFormField(
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(10),
+                            ],
+                            validator: (val) => val.isEmpty
+                                ? 'Required'
+                                : (val.length != 10)
+                                    ? 'Invalid Contact No'
+                                    : null,
+                            onChanged: (val) {
+                              setState(() {
+                                phone = val.trim();
+                              });
+                            },
+                            cursorColor: Colors.black,
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: phone,
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.only(
+                                  left: 14.0, bottom: 6.0, top: 8.0),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.grey[300]),
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.grey[300]),
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20.0),
+                    Row(
+                      children: [
+                        Text(
+                          'Address: ',
                           style: TextStyle(fontSize: 20),
                         ),
                         SizedBox(
@@ -132,12 +167,12 @@ class _EditEmployeeState extends State<EditEmployee> {
                             validator: (val) => val.isEmpty ? 'Required' : null,
                             onChanged: (val) {
                               setState(() {
-                                password = val.trim();
+                                address = val.trim();
                               });
                             },
                             decoration: InputDecoration(
                               border: InputBorder.none,
-                              hintText: password,
+                              hintText: address,
                               filled: true,
                               fillColor: Colors.white,
                               contentPadding: const EdgeInsets.only(
@@ -158,41 +193,6 @@ class _EditEmployeeState extends State<EditEmployee> {
                     SizedBox(
                       height: 20,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(40.0, 10.0, 40, 0),
-                      child: SearchableDropdown.multiple(
-                        items: privelages.map((exNum) {
-                          return (DropdownMenuItem(
-                              child: Text(exNum), value: exNum));
-                        }).toList(),
-                        hint: "Permissions..",
-                        searchHint: "Privelages",
-                        onChanged: (value) {
-                          permissions.clear();
-                          for (var k in value) {
-                            if (mounted) {
-                              setState(() {
-                                permissions.add(privelages.elementAt(k));
-                              });
-                            }
-                          }
-                        },
-                        dialogBox: true,
-                        isExpanded: true,
-                      ),
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    permissions.length > 0
-                        ? Center(
-                            child: Text(
-                              permissions.toString(),
-                              style: TextStyle(fontSize: 20),
-                            ),
-                          )
-                        : Container(),
-                    SizedBox(height: 20.0),
                     Center(
                       child: RaisedButton(
                         onPressed: () {
@@ -204,24 +204,26 @@ class _EditEmployeeState extends State<EditEmployee> {
                                 title: Text('Confirm?'),
                                 content: SingleChildScrollView(
                                   child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Name : ' + newName,
+                                        'Name : ' + clientName,
                                         style: TextStyle(fontSize: 20),
                                       ),
                                       SizedBox(
                                         height: 10,
                                       ),
                                       Text(
-                                        'Password : ' + password,
+                                        'Phone : ' + phone,
                                         style: TextStyle(fontSize: 20),
                                       ),
                                       SizedBox(
                                         height: 10,
                                       ),
                                       Text(
-                                        'Permissions : ' +
-                                            permissions.toString(),
+                                        'Address : ' + address,
                                         style: TextStyle(fontSize: 20),
                                       ),
                                     ],
@@ -243,26 +245,16 @@ class _EditEmployeeState extends State<EditEmployee> {
                                         insetAnimCurve: Curves.easeInOut,
                                       );
                                       await pr.show();
-                                      Map<dynamic, dynamic> per = new Map();
-                                      for (var k in permissions) {
-                                        per[k] = k;
-                                      }
                                       final bgRef = FirebaseDatabase.instance
                                           .reference()
                                           .child("Spectra");
-                                      if (newName != name) {
-                                        await bgRef
-                                            .child("Users")
-                                            .child(name)
-                                            .remove();
-                                      }
                                       await bgRef
-                                          .child("Users")
-                                          .child(newName)
-                                          .set({
-                                        'name': newName,
-                                        'password': password,
-                                        'permissions': per,
+                                          .child("Clients")
+                                          .child(clientName)
+                                          .update({
+                                        'clientName': clientName,
+                                        'phone': phone,
+                                        'address': address
                                       });
                                       pr.hide();
                                       Navigator.of(context).pop();
@@ -272,8 +264,8 @@ class _EditEmployeeState extends State<EditEmployee> {
                                           context,
                                           new MaterialPageRoute(
                                               builder: (context) =>
-                                                  new ViewEmployees(
-                                                      widget.id)));
+                                                  new ViewClients(
+                                                      widget.name)));
                                     },
                                   ),
                                   TextButton(

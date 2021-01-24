@@ -12,7 +12,6 @@ import 'package:progress_dialog/progress_dialog.dart';
 import 'package:searchable_dropdown/searchable_dropdown.dart';
 import 'package:spectra/models/encryption.dart';
 import 'package:spectra/models/project.dart';
-import 'package:spectra/screens/loginHome.dart';
 
 class Expenses extends StatefulWidget {
   final String name;
@@ -74,11 +73,9 @@ class _ExpensesState extends State<Expenses> {
     projects = new List();
     if (database["Projects"] != null) {
       for (var k in database["Projects"].keys) {
-        for (var pid in database["Projects"][k].keys) {
-          projects.add(Project.select(
-              pName: database["Projects"][k][pid]['details'],
-              pid: Encrypt.decodeString(pid)));
-        }
+        projects.add(Project.select(
+            pName: database["Projects"][k]['pName'],
+            pid: Encrypt.decodeString(k)));
       }
     }
     heads = new List();
@@ -172,6 +169,35 @@ class _ExpensesState extends State<Expenses> {
                             }).toList(),
                             hint: "Type Name",
                             searchHint: "Name",
+                            searchFn: (String keyword, items) {
+                              List<int> ret = List<int>();
+                              if (keyword != null &&
+                                  items != null &&
+                                  keyword.isNotEmpty) {
+                                keyword.split(" ").forEach((k) {
+                                  int i = 0;
+                                  projects.forEach((item) {
+                                    if (k.isNotEmpty &&
+                                        (item.pName
+                                                .toString()
+                                                .toLowerCase()
+                                                .contains(k.toLowerCase()) ||
+                                            item.pid
+                                                .toString()
+                                                .toLowerCase()
+                                                .contains(k.toLowerCase()))) {
+                                      ret.add(i);
+                                    }
+                                    i++;
+                                  });
+                                });
+                              }
+                              if (keyword.isEmpty) {
+                                ret = Iterable<int>.generate(items.length)
+                                    .toList();
+                              }
+                              return (ret);
+                            },
                             onChanged: (value) {
                               projectId = value;
                             },
